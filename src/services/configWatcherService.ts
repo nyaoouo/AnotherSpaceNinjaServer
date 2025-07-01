@@ -61,6 +61,8 @@ export const validateConfig = (): void => {
         logger.info(`Updating config file to fix some issues with it.`);
         void saveConfig();
     }
+
+    triggerConfigReloadCallbacks();
 };
 
 export const saveConfig = async (): Promise<void> => {
@@ -72,5 +74,23 @@ export const syncConfigWithDatabase = (): void => {
     // Event messages are deleted after endDate. Since we don't use beginDate/endDate and instead have config toggles, we need to delete the messages once those bools are false.
     if (!config.worldState?.galleonOfGhouls) {
         void Inbox.deleteMany({ goalTag: "GalleonRobbery" }).then(() => {}); // For some reason, I can't just do `Inbox.deleteMany(...)`; it needs this whole circus.
+    }
+};
+
+export type OnReloadCallback = () => void | Promise<void>;
+
+const reloadCallbacks: OnReloadCallback[] = [];
+
+export const onConfigReload = (callback: OnReloadCallback): void => {
+    reloadCallbacks.push(callback);
+};
+
+export const triggerConfigReloadCallbacks = (): void => {
+    for (const callback of reloadCallbacks) {
+        try {
+            callback();
+        } catch (error) {
+            logger.error("Error in config reload callback:", error);
+        }
     }
 };

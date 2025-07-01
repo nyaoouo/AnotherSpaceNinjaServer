@@ -1,0 +1,11 @@
+{
+  "name": "ExamplePlugin",
+  "version": "1.0.0",
+  "description": "Example plugin for the server",
+  "author": "Your Name",
+  "main": "index.js",
+  "dependencies": [],
+  "config": {
+    "enabled": false
+  }
+}

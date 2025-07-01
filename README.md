@@ -1,3 +1,7 @@
+# Another Space Ninja Server
+
+This Repo is fork from <https://onlyg.it/OpenWF/SpaceNinjaServer>, all rights reserved by upstream.
+
 # Space Ninja Server
 
 More information for the moment here: [https://discord.gg/PNNZ3asUuY](https://discord.gg/PNNZ3asUuY)
