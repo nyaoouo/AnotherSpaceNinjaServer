@@ -1,5 +1,6 @@
 /node_modules
 /build
+/external/*
 
 /.env
 /config.json

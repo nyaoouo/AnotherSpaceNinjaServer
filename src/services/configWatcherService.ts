@@ -66,4 +66,23 @@ export const validateConfig = (): void => {
         logger.info(`Updating config file to fix some issues with it.`);
         void saveConfig();
     }
+    triggerConfigReloadCallbacks();
+};
+
+export type OnReloadCallback = () => void | Promise<void>;
+
+const reloadCallbacks: OnReloadCallback[] = [];
+
+export const onConfigReload = (callback: OnReloadCallback): void => {
+    reloadCallbacks.push(callback);
+};
+
+export const triggerConfigReloadCallbacks = (): void => {
+    for (const callback of reloadCallbacks) {
+        try {
+            callback();
+        } catch (error) {
+            logger.error("Error in config reload callback:", error);
+        }
+    }
 };
