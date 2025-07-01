@@ -15,7 +15,8 @@ process.on("SIGTERM", () => {
     });
 });
 
-pluginManager.loadPlugins().then(() => {
+void pluginManager.loadPlugins().then(() => {
     logger.info("All plugins loaded successfully.");
-    return require("./index");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    void require("./index");
 });

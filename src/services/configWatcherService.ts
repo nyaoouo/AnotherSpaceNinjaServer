@@ -80,7 +80,7 @@ export const onConfigReload = (callback: OnReloadCallback): void => {
 export const triggerConfigReloadCallbacks = (): void => {
     for (const callback of reloadCallbacks) {
         try {
-            callback();
+            void callback();
         } catch (error) {
             logger.error("Error in config reload callback:", error);
         }
