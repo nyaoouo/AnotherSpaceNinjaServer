@@ -92,16 +92,16 @@ class PluginGenerator {
      * Create TypeScript plugin template
      */
     createTypeScriptPlugin(pluginDir, name) {
-        const template = `import { IPlugin } from "@/src/types/pluginTypes";
-import { logger } from "@/src/utils/logger";
+        const template = `import { PluginBase } from "@/src/utils/plugin-base";
+import { PluginManifest } from "@/src/types/pluginTypes";
 
-export default class ${name} implements IPlugin {
-    public name = "${name}";
-    public version = "1.0.0";
-    public description = "${name} plugin for Warframe Emulator";
+export default class ${name} extends PluginBase {
+    constructor(manifest: PluginManifest) {
+        super(manifest);
+    }
 
     async initialize(): Promise<void> {
-        logger.info(\`[\${this.name}] Plugin initialized successfully!\`);
+        this.logger.info(\`Plugin initialized successfully!\`);
 
         // Add your plugin initialization logic here
         // For example:
@@ -114,7 +114,7 @@ export default class ${name} implements IPlugin {
     }
 
     async cleanup(): Promise<void> {
-        logger.info(\`[\${this.name}] Plugin cleanup completed\`);
+        this.logger.info(\`Plugin cleanup completed\`);
 
         // Add your cleanup logic here
         // For example:
@@ -129,7 +129,7 @@ export default class ${name} implements IPlugin {
     // Add your custom methods here
     // Example:
     // public async customMethod(): Promise<void> {
-    //     logger.info(\`[\${this.name}] Custom method called\`);
+    //     logger.info(\`Custom method called\`);
     // }
 }
 `;
@@ -143,66 +143,7 @@ export default class ${name} implements IPlugin {
      * Create JavaScript plugin template
      */
     createJavaScriptPlugin(pluginDir, name) {
-        const template = `/**
- * ${name} Plugin
- * ${name} plugin for Warframe Emulator
- */
-import {logger} from "../../src/utils/logger.js";
-
-class ${name} {
-    constructor() {
-        this.name = "${name}";
-        this.version = "1.0.0";
-        this.description = "${name} plugin for Warframe Emulator";
-    }
-
-    async initialize() {
-        logger.info(\`[\${this.name}] Plugin initialized successfully!\`);
-
-        // Add your plugin initialization logic here
-        // For example:
-        // - Register new routes
-        // - Add new API endpoints
-        // - Set up event listeners
-        // - Connect to external services
-
-        return Promise.resolve(); // Remove this line and add your actual logic
-    }
-
-    async cleanup() {
-        logger.info(\`[\${this.name}] Plugin cleanup completed\`);
-
-        // Add your cleanup logic here
-        // For example:
-        // - Close database connections
-        // - Clear timers/intervals
-        // - Remove event listeners
-        // - Cleanup resources
-
-        return Promise.resolve(); // Remove this line and add your actual logic
-    }
-
-    // Add your custom methods here
-    // Example:
-    // async customMethod() {
-    //     console.log(\`[\${this.name}] Custom method called\`);
-    // }
-}
-
-export default ${name};
-`;
-
-        const pluginPath = path.join(pluginDir, "index.js");
-        fs.writeFileSync(pluginPath, template);
-        console.log(`📝 Created: index.js`);
-
-        // Create package.json for ES module support
-        const packageJson = {
-            type: "module"
-        };
-        const packagePath = path.join(pluginDir, "package.json");
-        fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
-        console.log(`📝 Created: package.json`);
+        throw new Error("JavaScript plugin generation is not implemented yet. Please use TypeScript for now.");
     }
 }
 

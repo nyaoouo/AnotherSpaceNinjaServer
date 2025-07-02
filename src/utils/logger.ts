@@ -26,16 +26,19 @@ import { isEmptyObject } from "@/src/helpers/general";
 
 //TODO: in production utils.inspect might be slowing down requests see utils.inspect
 const consolelogFormat = format.printf(info => {
+    let result = `${info.timestamp as string} [${info.version as string}] ${info.level}:`;
+    // Add module information if present (from child loggers)
+    if (info.module) result += `  [${info.module as string}]`;
+    result += `${info.message as string}`;
     if (!isEmptyObject(info.metadata)) {
         const metadataString = util.inspect(info.metadata, {
             showHidden: false,
             depth: null,
             colors: true
         });
-
-        return `${info.timestamp as string} [${info.version as string}] ${info.level}: ${info.message as string} ${metadataString}`;
+        result += ` ${metadataString}`;
     }
-    return `${info.timestamp as string} [${info.version as string}] ${info.level}: ${info.message as string}`;
+    return result;
 });
 
 const fileFormat = format.combine(
@@ -66,7 +69,7 @@ const consoleLog = new transports.Console({
         //alwaysAddMetadata(),
         format.errors({ stack: true }),
         format.align(),
-        format.metadata({ fillExcept: ["message", "level", "timestamp", "version"] }),
+        format.metadata({ fillExcept: ["message", "level", "timestamp", "version", "module"] }),
         consolelogFormat
     )
 });
