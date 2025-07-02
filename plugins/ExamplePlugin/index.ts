@@ -1,14 +1,13 @@
-import { IPlugin } from "@/src/types/pluginTypes";
-import { logger } from "@/src/utils/logger";
+import { PluginBase } from "@/src/utils/plugin-base";
+import { PluginManifest } from "@/src/types/pluginTypes";
 
-export default class ExamplePlugin implements IPlugin {
-    public name = "ExamplePlugin";
-    public version = "1.0.0";
-    public description = "Example plugin for the server";
-    public author = "Your Name";
+export default class ExamplePlugin extends PluginBase {
+    constructor(manifest: PluginManifest) {
+        super(manifest);
+    }
 
     async initialize(): Promise<void> {
-        logger.info(`[${this.name}] Plugin initialized successfully!`);
+        this.logger.info(`Plugin initialized successfully!`);
 
         // Add your plugin initialization logic here
         // For example:
@@ -20,7 +19,7 @@ export default class ExamplePlugin implements IPlugin {
     }
 
     async cleanup(): Promise<void> {
-        logger.info(`[${this.name}] Plugin cleanup completed`);
+        this.logger.info(`Plugin cleanup completed`);
 
         // Add your cleanup logic here
         // For example:

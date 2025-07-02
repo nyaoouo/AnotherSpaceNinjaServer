@@ -10,9 +10,9 @@ interface PluginRegistry {
 
 interface PluginModule {
     default?:
-        | (new () => IPlugin)
+        | (new (manifest: PluginManifest) => IPlugin)
         | {
-              default?: new () => IPlugin;
+              default?: new (manifest: PluginManifest) => IPlugin;
           };
     [key: string]: unknown;
 }
@@ -95,14 +95,14 @@ export class PluginManager {
 
             const pluginModule = (await import(pathToFileURL(mainFile).href)) as PluginModule;
 
-            let PluginClass: (new () => IPlugin) | undefined;
+            let PluginClass: (new (manifest: PluginManifest) => IPlugin) | undefined;
 
             if (typeof pluginModule.default === "function") {
                 PluginClass = pluginModule.default;
             } else if (typeof pluginModule.default === "object" && pluginModule.default.default) {
                 PluginClass = pluginModule.default.default;
             } else if (pluginModule[manifest.name]) {
-                PluginClass = pluginModule[manifest.name] as new () => IPlugin;
+                PluginClass = pluginModule[manifest.name] as new (manifest: PluginManifest) => IPlugin;
             }
 
             if (!PluginClass) {
@@ -110,7 +110,7 @@ export class PluginManager {
                 return;
             }
 
-            const plugin = new PluginClass();
+            const plugin = new PluginClass(manifest);
 
             // Validate plugin interface
             if (!this.validatePlugin(plugin)) {
