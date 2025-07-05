@@ -1,18 +1,12 @@
 import { Types } from "mongoose";
 import {
-    IEquipmentClient,
-    IEquipmentDatabase,
     IItemConfig,
     IOperatorConfigClient,
     IOperatorConfigDatabase
-} from "../types/inventoryTypes/commonInventoryTypes";
-import { IMongoDate } from "../types/commonTypes";
+} from "@/src/types/inventoryTypes/commonInventoryTypes";
+import { IMongoDate } from "@/src/types/commonTypes";
 import {
     equipmentKeys,
-    ICrewShipMemberClient,
-    ICrewShipMemberDatabase,
-    ICrewShipMembersClient,
-    ICrewShipMembersDatabase,
     IDialogueClient,
     IDialogueDatabase,
     IDialogueHistoryClient,
@@ -20,10 +14,6 @@ import {
     IInfestedFoundryClient,
     IInfestedFoundryDatabase,
     IInventoryClient,
-    IKubrowPetDetailsClient,
-    IKubrowPetDetailsDatabase,
-    ILoadoutConfigClient,
-    ILoadOutPresets,
     INemesisClient,
     INemesisDatabase,
     IPendingRecipeClient,
@@ -35,10 +25,25 @@ import {
     IUpgradeDatabase,
     IWeaponSkinClient,
     IWeaponSkinDatabase
-} from "../types/inventoryTypes/inventoryTypes";
-import { TInventoryDatabaseDocument } from "../models/inventoryModels/inventoryModel";
-import { ILoadoutConfigDatabase, ILoadoutDatabase } from "../types/saveLoadoutTypes";
-import { slotNames } from "../types/purchaseTypes";
+} from "@/src/types/inventoryTypes/inventoryTypes";
+import { TInventoryDatabaseDocument } from "@/src/models/inventoryModels/inventoryModel";
+import {
+    ILoadoutConfigClient,
+    ILoadoutConfigDatabase,
+    ILoadoutDatabase,
+    ILoadOutPresets
+} from "@/src/types/saveLoadoutTypes";
+import { slotNames } from "@/src/types/purchaseTypes";
+import {
+    ICrewShipMemberClient,
+    ICrewShipMemberDatabase,
+    ICrewShipMembersClient,
+    ICrewShipMembersDatabase,
+    IEquipmentClient,
+    IEquipmentDatabase,
+    IKubrowPetDetailsClient,
+    IKubrowPetDetailsDatabase
+} from "@/src/types/equipmentTypes";
 
 const convertDate = (value: IMongoDate): Date => {
     return new Date(parseInt(value.$date.$numberLong));

@@ -127,7 +127,7 @@ dict = {
     mods_fingerprintHelp: `需要印记相关的帮助？`,
     mods_rivens: `裂罅MOD`,
     mods_mods: `Mods`,
-    mods_addMax: `设为满级`,
+    mods_addMax: `添加（满级）`,
     mods_addMissingUnrankedMods: `添加所有缺失的Mods`,
     mods_removeUnranked: `删除所有未升级的Mods`,
     mods_addMissingMaxRankMods: `添加所有缺失的满级Mods`,
@@ -246,6 +246,8 @@ dict = {
     worldState_allAtOnceSteelPath: `全部开启（钢铁之路）`,
     worldState_theCircuitOverride: `无尽回廊任务循环配置:`,
     worldState_darvoStockMultiplier: `Darvo特惠库存倍率`,
+    worldState_varziaFullyStocked: `[UNTRANSLATED] Varzia Fully Stocked`,
+    worldState_varziaOverride: `[UNTRANSLATED] Varzia Rotation Override`,
 
     import_importNote: `您可以在此处提供完整或部分库存响应（客户端表示）。支持的所有字段<b>将被覆盖</b>到您的账户中。`,
     import_submit: `提交`,
@@ -300,8 +302,8 @@ dict = {
     upgrade_OnExecutionBlind: `怜悯之击致盲18米范围内的敌人`,
     upgrade_OnExecutionDrainPower: `怜悯之击会使下一个技能有100%的机会获得+50%的技能强度`,
     upgrade_OnHackSprintSpeed: `入侵后+75%冲刺速度，持续15秒`,
-    upgrade_SwiftExecute: `怜悯之击速度提升50%`,
-    upgrade_OnHackInvis: `入侵后隐身15秒`,
+    upgrade_SwiftExecute: `[UNTRANSLATED] +50% Mercy Kill Speed`,
+    upgrade_OnHackInvis: `[UNTRANSLATED] Invisible for 15 seconds after Hacking`,
 
     damageType_Electricity: `电击`,
     damageType_Fire: `火焰`,

@@ -1,9 +1,11 @@
 import chokidar from "chokidar";
 import fsPromises from "fs/promises";
-import { logger } from "../utils/logger";
-import { config, configPath, loadConfig } from "./configService";
-import { getWebPorts, sendWsBroadcast, startWebServer, stopWebServer } from "./webService";
-import { Inbox } from "../models/inboxModel";
+import { logger } from "@/src/utils/logger";
+import { config, configPath, loadConfig } from "@/src/services/configService";
+import { getWebPorts, startWebServer, stopWebServer } from "@/src/services/webService";
+import { sendWsBroadcast } from "@/src/services/wsService";
+import { Inbox } from "@/src/models/inboxModel";
+import varzia from "@/static/fixed_responses/worldState/varzia.json";
 
 let amnesia = false;
 chokidar.watch(configPath).on("change", () => {
@@ -55,6 +57,13 @@ export const validateConfig = (): void => {
         config.worldState.galleonOfGhouls != 3
     ) {
         config.worldState.galleonOfGhouls = 0;
+        modified = true;
+    }
+    if (
+        config.worldState?.varziaOverride &&
+        !varzia.primeDualPacks.some(p => p.ItemType === config.worldState?.varziaOverride)
+    ) {
+        config.worldState.varziaOverride = "";
         modified = true;
     }
     if (modified) {

@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
-import { IOid, IMongoDate, IOidWithLegacySupport } from "../commonTypes";
+import { IOid, IMongoDate, IOidWithLegacySupport, ITypeCount } from "@/src/types/commonTypes";
 import {
     IColor,
     IItemConfig,
     IOperatorConfigClient,
-    IEquipmentSelection,
-    IEquipmentDatabase,
-    IEquipmentClient,
-    IOperatorConfigDatabase
+    IOperatorConfigDatabase,
+    IFlavourItem,
+    ILotusCustomization,
+    IShipCustomization
 } from "@/src/types/inventoryTypes/commonInventoryTypes";
 import { IFingerprintStat, RivenFingerprint } from "@/src/helpers/rivenHelper";
-import { IOrbiter } from "../personalRoomsTypes";
+import { IOrbiterClient } from "@/src/types/personalRoomsTypes";
 import { ICountedStoreItem } from "warframe-public-export-plus";
+import { IEquipmentClient, IEquipmentDatabase, ITraits } from "@/src/types/equipmentTypes";
+import { ILoadOutPresets } from "@/src/types/saveLoadoutTypes";
 
 export type InventoryDatabaseEquipment = {
     [_ in TEquipmentKey]: IEquipmentDatabase[];
@@ -108,11 +110,6 @@ export interface IQuestKeyDatabase {
     CustomData?: string;
     ItemType: string;
     CompletionDate?: Date;
-}
-
-export interface ITypeCount {
-    ItemType: string;
-    ItemCount: number;
 }
 
 export const equipmentKeys = [
@@ -381,7 +378,7 @@ export interface IInventoryClient extends IDailyAffiliations, InventoryClientEqu
     BrandedSuits?: IOidWithLegacySupport[];
     LockedWeaponGroup?: ILockedWeaponGroupClient;
     HubNpcCustomizations?: IHubNpcCustomization[];
-    Ship?: IOrbiter; // U22 and below, response only
+    Ship?: IOrbiterClient; // U22 and below, response only
     ClaimedJunctionChallengeRewards?: string[]; // U39
     SpecialItemRewardAttenuation?: IRewardAttenuation[]; // Baro's Void Surplus
 }
@@ -552,63 +549,7 @@ export interface IUpgradeFromClient {
     LastAdded: IOidWithLegacySupport;
 }
 
-export interface ICrewShipMembersClient {
-    SLOT_A?: ICrewShipMemberClient;
-    SLOT_B?: ICrewShipMemberClient;
-    SLOT_C?: ICrewShipMemberClient;
-}
-
-export interface ICrewShipMembersDatabase {
-    SLOT_A?: ICrewShipMemberDatabase;
-    SLOT_B?: ICrewShipMemberDatabase;
-    SLOT_C?: ICrewShipMemberDatabase;
-}
-
-export interface ICrewShipMemberClient {
-    ItemId?: IOid;
-    NemesisFingerprint?: number | bigint;
-}
-
-export interface ICrewShipMemberDatabase {
-    ItemId?: Types.ObjectId;
-    NemesisFingerprint?: bigint;
-}
-
-export interface ICrewShipCustomization {
-    CrewshipInterior: IShipExterior;
-}
-
-export interface IShipExterior {
-    SkinFlavourItem?: string;
-    Colors?: IColor;
-    ShipAttachments?: IShipAttachments;
-}
-
-export interface IShipAttachments {
-    HOOD_ORNAMENT: string;
-}
-
-export interface IFlavourItem {
-    ItemType: string;
-}
-
 export type IMiscItem = ITypeCount;
-
-// inventory.CrewShips[0].Weapon
-export interface ICrewShipWeapon {
-    PILOT?: ICrewShipWeaponEmplacements;
-    PORT_GUNS?: ICrewShipWeaponEmplacements;
-    STARBOARD_GUNS?: ICrewShipWeaponEmplacements;
-    ARTILLERY?: ICrewShipWeaponEmplacements;
-    SCANNER?: ICrewShipWeaponEmplacements;
-}
-
-export interface ICrewShipWeaponEmplacements {
-    PRIMARY_A?: IEquipmentSelection;
-    PRIMARY_B?: IEquipmentSelection;
-    SECONDARY_A?: IEquipmentSelection;
-    SECONDARY_B?: IEquipmentSelection;
-}
 
 export interface IDiscoveredMarker {
     tag: string;
@@ -740,42 +681,6 @@ export interface IKubrowPetPrintDatabase extends Omit<IKubrowPetPrintClient, "It
     _id: Types.ObjectId;
 }
 
-export interface ITraits {
-    BaseColor: string;
-    SecondaryColor: string;
-    TertiaryColor: string;
-    AccentColor: string;
-    EyeColor: string;
-    FurPattern: string;
-    Personality: string;
-    BodyType: string;
-    Head?: string;
-    Tail?: string;
-}
-
-export interface IKubrowPetDetailsDatabase {
-    Name?: string;
-    IsPuppy?: boolean;
-    HasCollar: boolean;
-    PrintsRemaining: number;
-    Status: Status;
-    HatchDate?: Date;
-    DominantTraits: ITraits;
-    RecessiveTraits: ITraits;
-    IsMale: boolean;
-    Size: number;
-}
-
-export interface IKubrowPetDetailsClient extends Omit<IKubrowPetDetailsDatabase, "HatchDate"> {
-    HatchDate: IMongoDate;
-}
-
-export enum Status {
-    StatusAvailable = "STATUS_AVAILABLE",
-    StatusStasis = "STATUS_STASIS",
-    StatusIncubating = "STATUS_INCUBATING"
-}
-
 export interface ILastSortieRewardClient {
     SortieId: IOid;
     StoreItem: string;
@@ -808,45 +713,6 @@ export interface ILibraryPersonalProgress {
     Completed: boolean;
 }
 
-// keep in sync with ILoadoutDatabase
-export interface ILoadOutPresets {
-    NORMAL: ILoadoutConfigClient[];
-    NORMAL_PVP: ILoadoutConfigClient[];
-    LUNARO: ILoadoutConfigClient[];
-    ARCHWING: ILoadoutConfigClient[];
-    SENTINEL: ILoadoutConfigClient[];
-    OPERATOR: ILoadoutConfigClient[];
-    GEAR: ILoadoutConfigClient[];
-    KDRIVE: ILoadoutConfigClient[];
-    DATAKNIFE: ILoadoutConfigClient[];
-    MECH: ILoadoutConfigClient[];
-    OPERATOR_ADULT: ILoadoutConfigClient[];
-    DRIFTER: ILoadoutConfigClient[];
-}
-
-export enum FocusSchool {
-    Attack = "AP_ATTACK",
-    Defense = "AP_DEFENSE",
-    Power = "AP_POWER",
-    Tactic = "AP_TACTIC",
-    Ward = "AP_WARD"
-}
-
-export interface ILoadoutConfigClient {
-    FocusSchool?: FocusSchool;
-    PresetIcon?: string;
-    Favorite?: boolean;
-    n?: string; // Loadout name
-    s?: IEquipmentSelection; // Suit
-    p?: IEquipmentSelection; // Secondary weapon
-    l?: IEquipmentSelection; // Primary weapon
-    m?: IEquipmentSelection; // Melee weapon
-    h?: IEquipmentSelection; // Gravimag weapon
-    a?: IEquipmentSelection; // Necromech exalted weapon
-    ItemId: IOid;
-    Remove?: boolean; // when client wants to remove a config, it only includes ItemId & Remove.
-}
-
 export enum UpgradeType {
     LotusWeaponsGrineerKuvaLichUpgradesInnateDamageRandomMod = "/Lotus/Weapons/Grineer/KuvaLich/Upgrades/InnateDamageRandomMod"
 }
@@ -855,10 +721,6 @@ export interface ILoreFragmentScan {
     Progress: number;
     Region?: string;
     ItemType: string;
-}
-
-export interface ILotusCustomization extends IItemConfig {
-    Persona: string;
 }
 
 export interface IMissionDatabase {
@@ -1104,7 +966,7 @@ export interface ISettings {
 
 export interface IShipInventory {
     ItemType: string;
-    ShipExterior: IShipExterior;
+    ShipExterior: IShipCustomization;
     AirSupportPower: string;
     ItemId: IOid;
 }

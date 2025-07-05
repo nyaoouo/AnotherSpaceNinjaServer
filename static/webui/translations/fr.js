@@ -246,6 +246,8 @@ dict = {
     worldState_allAtOnceSteelPath: `[UNTRANSLATED] All At Once, Steel Path`,
     worldState_theCircuitOverride: `[UNTRANSLATED] The Circuit Override`,
     worldState_darvoStockMultiplier: `[UNTRANSLATED] Darvo Stock Multiplier`,
+    worldState_varziaFullyStocked: `[UNTRANSLATED] Varzia Fully Stocked`,
+    worldState_varziaOverride: `[UNTRANSLATED] Varzia Rotation Override`,
 
     import_importNote: `Import manuel. Toutes les modifcations supportées par l'inventaire <b>écraseront celles présentes dans la base de données</b>.`,
     import_submit: `Soumettre`,
@@ -300,8 +302,8 @@ dict = {
     upgrade_OnExecutionBlind: `Les ennemis sont aveuglés dans un rayon de 18 après une miséricorde`,
     upgrade_OnExecutionDrainPower: `100% pour le prochain pouvoir de gagner +50% de puissance de pouvoir sur miséricorde`,
     upgrade_OnHackSprintSpeed: `+75% de vitesse de course pendant 15s après un piratage`,
-    upgrade_SwiftExecute: `Vitesse des miséricordes augmentée de 50%`,
-    upgrade_OnHackInvis: `Invisible pendant 15 secondes après un piratage`,
+    upgrade_SwiftExecute: `[UNTRANSLATED] +50% Mercy Kill Speed`,
+    upgrade_OnHackInvis: `[UNTRANSLATED] Invisible for 15 seconds after Hacking`,
 
     damageType_Electricity: `Électrique`,
     damageType_Fire: `Feu`,

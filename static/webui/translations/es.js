@@ -246,6 +246,8 @@ dict = {
     worldState_allAtOnceSteelPath: `Todo a la vez, Camino de Acero`,
     worldState_theCircuitOverride: `Cambio del Circuito`,
     worldState_darvoStockMultiplier: `Multiplicador de stock de Darvo`,
+    worldState_varziaFullyStocked: `[UNTRANSLATED] Varzia Fully Stocked`,
+    worldState_varziaOverride: `[UNTRANSLATED] Varzia Rotation Override`,
 
     import_importNote: `Puedes proporcionar una respuesta de inventario completa o parcial (representación del cliente) aquí. Todos los campos compatibles con el importador <b>serán sobrescritos</b> en tu cuenta.`,
     import_submit: `Enviar`,
@@ -300,8 +302,8 @@ dict = {
     upgrade_OnExecutionBlind: `Ciega a los enemigos en un radio de 18m tras una ejecución`,
     upgrade_OnExecutionDrainPower: `100% de probabilidad de que la siguiente habilidad tenga +50% de fuerza tras una ejecución`,
     upgrade_OnHackSprintSpeed: `+75% de velocidad de carrera durante 15s después de hackear`,
-    upgrade_SwiftExecute: `Velocidad de ejecuciones aumentada en un 50%`,
-    upgrade_OnHackInvis: `Invisible durante 15 segundos después de hackear`,
+    upgrade_SwiftExecute: `[UNTRANSLATED] +50% Mercy Kill Speed`,
+    upgrade_OnHackInvis: `[UNTRANSLATED] Invisible for 15 seconds after Hacking`,
 
     damageType_Electricity: `Eletricidade`,
     damageType_Fire: `Ígneo`,

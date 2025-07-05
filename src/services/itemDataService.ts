@@ -17,6 +17,7 @@ import {
     dict_zh,
     ExportArcanes,
     ExportBoosters,
+    ExportBundles,
     ExportCustoms,
     ExportDrones,
     ExportGear,
@@ -32,7 +33,7 @@ import {
     IRecipe,
     TReward
 } from "warframe-public-export-plus";
-import { IMessage } from "../models/inboxModel";
+import { IMessage } from "@/src/models/inboxModel";
 
 export type WeaponTypeInternal =
     | "LongGuns"
@@ -116,6 +117,9 @@ export const getItemCategoryByUniqueName = (uniqueName: string): string | undefi
 export const getItemName = (uniqueName: string): string | undefined => {
     if (uniqueName in ExportArcanes) {
         return ExportArcanes[uniqueName].name;
+    }
+    if (uniqueName in ExportBundles) {
+        return ExportBundles[uniqueName].name;
     }
     if (uniqueName in ExportCustoms) {
         return ExportCustoms[uniqueName].name;

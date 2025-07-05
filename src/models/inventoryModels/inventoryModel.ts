@@ -1,6 +1,5 @@
 import { Document, Model, Schema, Types, model } from "mongoose";
 import {
-    IFlavourItem,
     IRawUpgrade,
     IMiscItem,
     IInventoryDatabase,
@@ -10,7 +9,6 @@ import {
     IDuviriInfo,
     IPendingRecipeDatabase,
     IPendingRecipeClient,
-    ITypeCount,
     IFocusXP,
     IFocusUpgrade,
     ITypeXPItem,
@@ -39,25 +37,15 @@ import {
     IEvolutionProgress,
     IEndlessXpProgressDatabase,
     IEndlessXpProgressClient,
-    ICrewShipCustomization,
-    ICrewShipWeapon,
-    ICrewShipWeaponEmplacements,
-    IShipExterior,
     IHelminthFoodRecord,
-    ICrewShipMembersDatabase,
     IDialogueHistoryDatabase,
     IDialogueDatabase,
     IDialogueGift,
     ICompletedDialogue,
     IDialogueClient,
     IUpgradeDatabase,
-    ICrewShipMemberDatabase,
-    ICrewShipMemberClient,
     TEquipmentKey,
     equipmentKeys,
-    IKubrowPetDetailsDatabase,
-    ITraits,
-    IKubrowPetDetailsClient,
     IKubrowPetEggDatabase,
     IKubrowPetEggClient,
     ICustomMarkers,
@@ -96,27 +84,39 @@ import {
     IInvasionProgressClient,
     IAccolades,
     IHubNpcCustomization,
-    ILotusCustomization,
     IEndlessXpReward,
     IPersonalGoalProgressDatabase,
     IPersonalGoalProgressClient,
     IKubrowPetPrintClient,
     IKubrowPetPrintDatabase
-} from "../../types/inventoryTypes/inventoryTypes";
-import { IOid } from "../../types/commonTypes";
+} from "@/src/types/inventoryTypes/inventoryTypes";
+import { IOid, ITypeCount } from "@/src/types/commonTypes";
 import {
     IAbilityOverride,
-    IColor,
+    ICrewShipCustomization,
+    IFlavourItem,
     IItemConfig,
+    ILotusCustomization,
     IOperatorConfigDatabase,
-    IPolarity,
-    IEquipmentDatabase,
-    IArchonCrystalUpgrade,
-    IEquipmentClient
+    IPolarity
 } from "@/src/types/inventoryTypes/commonInventoryTypes";
 import { toMongoDate, toOid } from "@/src/helpers/inventoryHelpers";
-import { EquipmentSelectionSchema, oidSchema } from "./loadoutModel";
+import { EquipmentSelectionSchema, oidSchema } from "@/src/models/inventoryModels/loadoutModel";
 import { ICountedStoreItem } from "warframe-public-export-plus";
+import { colorSchema, shipCustomizationSchema } from "@/src/models/commonModel";
+import {
+    IArchonCrystalUpgrade,
+    ICrewShipMemberClient,
+    ICrewShipMemberDatabase,
+    ICrewShipMembersDatabase,
+    ICrewShipWeapon,
+    ICrewShipWeaponEmplacements,
+    IEquipmentClient,
+    IEquipmentDatabase,
+    IKubrowPetDetailsClient,
+    IKubrowPetDetailsDatabase,
+    ITraits
+} from "@/src/types/equipmentTypes";
 
 export const typeCountSchema = new Schema<ITypeCount>({ ItemType: String, ItemCount: Number }, { _id: false });
 
@@ -162,20 +162,6 @@ const abilityOverrideSchema = new Schema<IAbilityOverride>(
     {
         Ability: String,
         Index: Number
-    },
-    { _id: false }
-);
-
-export const colorSchema = new Schema<IColor>(
-    {
-        t0: Number,
-        t1: Number,
-        t2: Number,
-        t3: Number,
-        en: Number,
-        e1: Number,
-        m0: Number,
-        m1: Number
     },
     { _id: false }
 );
@@ -896,18 +882,9 @@ const crewShipWeaponSchema = new Schema<ICrewShipWeapon>(
     { _id: false }
 );
 
-const shipExteriorSchema = new Schema<IShipExterior>(
-    {
-        SkinFlavourItem: String,
-        Colors: colorSchema,
-        ShipAttachments: { HOOD_ORNAMENT: String }
-    },
-    { _id: false }
-);
-
 const crewShipCustomizationSchema = new Schema<ICrewShipCustomization>(
     {
-        CrewshipInterior: shipExteriorSchema
+        CrewshipInterior: shipCustomizationSchema
     },
     { _id: false }
 );

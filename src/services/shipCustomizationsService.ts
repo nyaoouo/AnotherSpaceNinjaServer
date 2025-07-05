@@ -1,21 +1,22 @@
 import { getPersonalRooms } from "@/src/services/personalRoomsService";
 import { getShip } from "@/src/services/shipService";
 import {
+    ISetPlacedDecoInfoRequest,
     ISetShipCustomizationsRequest,
     IShipDecorationsRequest,
     IShipDecorationsResponse,
-    ISetPlacedDecoInfoRequest,
-    TBootLocation
-} from "@/src/types/shipTypes";
+    RoomsType,
+    TBootLocation,
+    TPersonalRoomsDatabaseDocument
+} from "@/src/types/personalRoomsTypes";
 import { logger } from "@/src/utils/logger";
 import { Types } from "mongoose";
-import { addFusionTreasures, addShipDecorations, getInventory } from "./inventoryService";
-import { config } from "./configService";
-import { Guild } from "../models/guildModel";
-import { hasGuildPermission } from "./guildService";
-import { GuildPermission } from "../types/guildTypes";
+import { addFusionTreasures, addShipDecorations, getInventory } from "@/src/services/inventoryService";
+import { config } from "@/src/services/configService";
+import { Guild } from "@/src/models/guildModel";
+import { hasGuildPermission } from "@/src/services/guildService";
+import { GuildPermission } from "@/src/types/guildTypes";
 import { ExportResources } from "warframe-public-export-plus";
-import { RoomsType, TPersonalRoomsDatabaseDocument } from "../types/personalRoomsTypes";
 
 export const setShipCustomizations = async (
     accountId: string,
@@ -39,7 +40,7 @@ export const setShipCustomizations = async (
             personalRooms.TailorShop.LevelDecosVisible = shipCustomization.Customization.LevelDecosVisible;
             personalRooms.TailorShop.CustomJson = shipCustomization.Customization.CustomJson;
         } else {
-            personalRooms.ShipInteriorColors = shipCustomization.Customization.Colors;
+            personalRooms.Ship.ShipInterior = shipCustomization.Customization;
         }
         await personalRooms.save();
     }

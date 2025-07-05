@@ -4,12 +4,10 @@ import { Types } from "mongoose";
 import { SlotNames, IInventoryChanges, IBinChanges, slotNames, IAffiliationMods } from "@/src/types/purchaseTypes";
 import {
     IChallengeProgress,
-    IFlavourItem,
     IMiscItem,
     IMission,
     IRawUpgrade,
     ISeasonChallenge,
-    ITypeCount,
     InventorySlot,
     IWeaponSkinClient,
     TEquipmentKey,
@@ -23,25 +21,17 @@ import {
     TPartialStartingGear,
     ILoreFragmentScan,
     ICrewMemberClient,
-    Status,
-    IKubrowPetDetailsDatabase,
-    ITraits,
     ICalendarProgress,
     INemesisWeaponTargetFingerprint,
     INemesisPetTargetFingerprint,
     IDialogueDatabase,
     IKubrowPetPrintClient
 } from "@/src/types/inventoryTypes/inventoryTypes";
-import { IGenericUpdate, IUpdateNodeIntrosResponse } from "../types/genericUpdate";
-import { IKeyChainRequest, IMissionInventoryUpdateRequest } from "../types/requestTypes";
+import { IGenericUpdate, IUpdateNodeIntrosResponse } from "@/src/types/genericUpdate";
+import { IKeyChainRequest, IMissionInventoryUpdateRequest } from "@/src/types/requestTypes";
 import { logger } from "@/src/utils/logger";
 import { convertInboxMessage, fromStoreItem, getKeyChainItems } from "@/src/services/itemDataService";
-import {
-    EquipmentFeatures,
-    IEquipmentClient,
-    IEquipmentDatabase,
-    IItemConfig
-} from "../types/inventoryTypes/commonInventoryTypes";
+import { IFlavourItem, IItemConfig } from "@/src/types/inventoryTypes/commonInventoryTypes";
 import {
     ExportArcanes,
     ExportBoosters,
@@ -69,7 +59,7 @@ import {
     ISentinel,
     TStandingLimitBin
 } from "warframe-public-export-plus";
-import { createShip } from "./shipService";
+import { createShip } from "@/src/services/shipService";
 import {
     catbrowDetails,
     fromMongoDate,
@@ -78,19 +68,34 @@ import {
     kubrowFurPatternsWeights,
     kubrowWeights,
     toOid
-} from "../helpers/inventoryHelpers";
+} from "@/src/helpers/inventoryHelpers";
 import { addQuestKey, completeQuest } from "@/src/services/questService";
-import { handleBundleAcqusition } from "./purchaseService";
+import { handleBundleAcqusition } from "@/src/services/purchaseService";
 import libraryDailyTasks from "@/static/fixed_responses/libraryDailyTasks.json";
-import { getRandomElement, getRandomInt, getRandomWeightedReward, SRng } from "./rngService";
-import { createMessage, IMessageCreationTemplate } from "./inboxService";
+import {
+    generateRewardSeed,
+    getRandomElement,
+    getRandomInt,
+    getRandomWeightedReward,
+    SRng
+} from "@/src/services/rngService";
+import { createMessage, IMessageCreationTemplate } from "@/src/services/inboxService";
 import { getMaxStanding, getMinStanding } from "@/src/helpers/syndicateStandingHelper";
-import { getNightwaveSyndicateTag, getWorldState } from "./worldStateService";
+import { getNightwaveSyndicateTag, getWorldState } from "@/src/services/worldStateService";
 import { ICalendarSeason } from "@/src/types/worldStateTypes";
-import { generateNemesisProfile, INemesisProfile } from "../helpers/nemesisHelpers";
-import { TAccountDocument } from "./loginService";
-import { unixTimesInMs } from "../constants/timeConstants";
-import { addString } from "../helpers/stringHelpers";
+import { generateNemesisProfile, INemesisProfile } from "@/src/helpers/nemesisHelpers";
+import { TAccountDocument } from "@/src/services/loginService";
+import { unixTimesInMs } from "@/src/constants/timeConstants";
+import { addString } from "@/src/helpers/stringHelpers";
+import {
+    EquipmentFeatures,
+    IEquipmentClient,
+    IEquipmentDatabase,
+    IKubrowPetDetailsDatabase,
+    ITraits,
+    Status
+} from "@/src/types/equipmentTypes";
+import { ITypeCount } from "@/src/types/commonTypes";
 
 export const createInventory = async (
     accountOwnerId: Types.ObjectId,
@@ -130,17 +135,6 @@ export const createInventory = async (
     } catch (error) {
         throw new Error(`Error creating inventory: ${error instanceof Error ? error.message : "Unknown error type"}`);
     }
-};
-
-export const generateRewardSeed = (): bigint => {
-    const hiDword = getRandomInt(0, 0x7fffffff);
-    const loDword = getRandomInt(0, 0xffffffff);
-    let seed = (BigInt(hiDword) << 32n) | BigInt(loDword);
-    if (Math.random() < 0.5) {
-        seed *= -1n;
-        seed -= 1n;
-    }
-    return seed;
 };
 
 //TODO: RawUpgrades might need to return a LastAdded
@@ -1266,8 +1260,8 @@ export const addStanding = (
     const max = getMaxStanding(syndicateMeta, syndicate.Title ?? 0);
     if (syndicate.Standing + gainedStanding > max) gainedStanding = max - syndicate.Standing;
 
-    if (syndicate.Title == -2 && syndicate.Standing + gainedStanding < -71000) {
-        gainedStanding = -71000 + syndicate.Standing;
+    if (syndicate.Standing + gainedStanding < -71000) {
+        gainedStanding = -71000 - syndicate.Standing;
     }
 
     if (!isMedallion || syndicateMeta.medallionsCappedByDailyLimit) {
@@ -1395,7 +1389,11 @@ export const addSkin = (
     if (inventory.WeaponSkins.some(x => x.ItemType == typeName)) {
         logger.debug(`refusing to add WeaponSkin ${typeName} because account already owns it`);
     } else {
-        const index = inventory.WeaponSkins.push({ ItemType: typeName, IsNew: true }) - 1;
+        const index =
+            inventory.WeaponSkins.push({
+                ItemType: typeName,
+                IsNew: typeName.startsWith("/Lotus/Upgrades/Skins/RailJack/") ? undefined : true // railjack skins are incompatible with this flag
+            }) - 1;
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         inventoryChanges.WeaponSkins ??= [];
         (inventoryChanges.WeaponSkins as IWeaponSkinClient[]).push(

@@ -1,10 +1,9 @@
-import { IOid } from "./commonTypes";
-import { ArtifactPolarity, IPolarity, IEquipmentClient } from "@/src/types/inventoryTypes/commonInventoryTypes";
+import { IOid, ITypeCount } from "@/src/types/commonTypes";
+import { ArtifactPolarity, IPolarity } from "@/src/types/inventoryTypes/commonInventoryTypes";
 import {
     IBooster,
     IChallengeProgress,
     IEvolutionProgress,
-    ITypeCount,
     IMission,
     IRawUpgrade,
     ISeasonChallenge,
@@ -19,13 +18,14 @@ import {
     ICollectibleEntry,
     IDiscoveredMarker,
     ILockedWeaponGroupClient,
-    ILoadOutPresets,
     IInvasionProgressClient,
     IWeaponSkinClient,
     IKubrowPetEggClient,
     INemesisClient
-} from "./inventoryTypes/inventoryTypes";
-import { IGroup } from "./loginTypes";
+} from "@/src/types/inventoryTypes/inventoryTypes";
+import { IGroup } from "@/src/types/loginTypes";
+import { ILoadOutPresets } from "@/src/types/saveLoadoutTypes";
+import { IEquipmentClient } from "@/src/types/equipmentTypes";
 
 export interface IAffiliationChange {
     Tag: string;

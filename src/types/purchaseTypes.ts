@@ -1,15 +1,15 @@
-import { IEquipmentClient } from "./inventoryTypes/commonInventoryTypes";
+import { ITypeCount } from "@/src/types/commonTypes";
+import { IEquipmentClient } from "@/src/types/equipmentTypes";
 import {
     IDroneClient,
     IInfestedFoundryClient,
     IMiscItem,
     INemesisClient,
-    ITypeCount,
     IRecentVendorPurchaseClient,
     TEquipmentKey,
     ICrewMemberClient,
     IKubrowPetPrintClient
-} from "./inventoryTypes/inventoryTypes";
+} from "@/src/types/inventoryTypes/inventoryTypes";
 
 export enum PurchaseSource {
     Market = 0,

@@ -246,6 +246,8 @@ dict = {
     worldState_allAtOnceSteelPath: `[UNTRANSLATED] All At Once, Steel Path`,
     worldState_theCircuitOverride: `[UNTRANSLATED] The Circuit Override`,
     worldState_darvoStockMultiplier: `[UNTRANSLATED] Darvo Stock Multiplier`,
+    worldState_varziaFullyStocked: `[UNTRANSLATED] Varzia Fully Stocked`,
+    worldState_varziaOverride: `[UNTRANSLATED] Varzia Rotation Override`,
 
     import_importNote: `Du kannst hier eine vollständige oder teilweise Inventarantwort (Client-Darstellung) einfügen. Alle Felder, die vom Importer unterstützt werden, <b>werden in deinem Account überschrieben</b>.`,
     import_submit: `Absenden`,
@@ -300,8 +302,8 @@ dict = {
     upgrade_OnExecutionBlind: `[UNTRANSLATED] Blind enemies within 18m on Mercy`,
     upgrade_OnExecutionDrainPower: `[UNTRANSLATED] +100% chance for next ability cast to gain +50% Ability Strength on Mercy`,
     upgrade_OnHackSprintSpeed: `[UNTRANSLATED] +75% Sprint Speed for 15s after Hacking`,
-    upgrade_SwiftExecute: `[UNTRANSLATED] Speed of Mercy Kills increased by 50%`,
-    upgrade_OnHackInvis: `[UNTRANSLATED] Invisible for 15 seconds after hacking`,
+    upgrade_SwiftExecute: `[UNTRANSLATED] +50% Mercy Kill Speed`,
+    upgrade_OnHackInvis: `[UNTRANSLATED] Invisible for 15 seconds after Hacking`,
 
     damageType_Electricity: `Elektrizität`,
     damageType_Fire: `Hitze`,
