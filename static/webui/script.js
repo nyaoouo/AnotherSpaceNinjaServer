@@ -273,6 +273,8 @@ function fetchItemList() {
     window.itemListPromise = new Promise(resolve => {
         const req = $.get("/custom/getItemLists?lang=" + window.lang);
         req.done(async data => {
+            window.allQuestKeys = data.QuestKeys;
+
             await dictPromise;
 
             document.querySelectorAll('[id^="datalist-"]').forEach(datalist => {
@@ -879,6 +881,14 @@ function updateInventory() {
 
             // Populate quests route
             document.getElementById("QuestKeys-list").innerHTML = "";
+            window.allQuestKeys.forEach(questKey => {
+                if (!data.QuestKeys.some(x => x.ItemType == questKey.uniqueName)) {
+                    const datalist = document.getElementById("datalist-QuestKeys");
+                    if (!datalist.querySelector(`option[data-key="${questKey.uniqueName}"]`)) {
+                        readdQuestKey(itemMap, questKey.uniqueName);
+                    }
+                }
+            });
             data.QuestKeys.forEach(item => {
                 const tr = document.createElement("tr");
                 tr.setAttribute("data-item-type", item.ItemType);
@@ -972,10 +982,7 @@ function updateInventory() {
                         a.href = "#";
                         a.onclick = function (event) {
                             event.preventDefault();
-                            const option = document.createElement("option");
-                            option.setAttribute("data-key", item.ItemType);
-                            option.value = itemMap[item.ItemType]?.name ?? item.ItemType;
-                            document.getElementById("datalist-QuestKeys").appendChild(option);
+                            readdQuestKey(itemMap, item.ItemType);
                             doQuestUpdate("deleteKey", item.ItemType);
                         };
                         a.title = loc("code_remove");
@@ -1166,14 +1173,15 @@ function updateInventory() {
                 const item = data[category].find(x => x.ItemId.$oid == oid);
 
                 if (item) {
+                    document.getElementById("detailedView-loading").classList.add("d-none");
+
                     if (item.ItemName) {
-                        $("#detailedView-route h3").text(item.ItemName);
+                        $("#detailedView-title").text(item.ItemName);
                         $("#detailedView-route .text-body-secondary").text(
                             itemMap[item.ItemType]?.name ?? item.ItemType
                         );
                     } else {
-                        $("#detailedView-route h3").text(itemMap[item.ItemType]?.name ?? item.ItemType);
-                        $("#detailedView-route .text-body-secondary").text("");
+                        $("#detailedView-title").text(itemMap[item.ItemType]?.name ?? item.ItemType);
                     }
 
                     if (category == "Suits") {
@@ -1954,6 +1962,19 @@ for (const id of uiConfigs) {
     }
 }
 
+document.querySelectorAll(".config-form .input-group").forEach(grp => {
+    const input = grp.querySelector("input");
+    const btn = grp.querySelector("button");
+    input.oninput = input.onchange = function () {
+        btn.classList.remove("btn-secondary");
+        btn.classList.add("btn-primary");
+    };
+    btn.onclick = function () {
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-secondary");
+    };
+});
+
 function doSaveConfigInt(id) {
     $.post({
         url: "/custom/setConfig?" + window.authz + "&wsid=" + wsid,
@@ -2010,7 +2031,7 @@ single.getRoute("/webui/cheats").on("beforeload", function () {
                         if (elm.type == "checkbox") {
                             elm.checked = value;
                         } else if (elm.classList.contains("tags-input")) {
-                            elm.value = value.join(", ");
+                            elm.value = (value ?? []).join(", ");
                             elm.oninput();
                         } else {
                             elm.value = value ?? elm.getAttribute("data-default");
@@ -2171,7 +2192,9 @@ function doAddMissingMaxRankMods() {
 // DetailedView Route
 
 single.getRoute("#detailedView-route").on("beforeload", function () {
-    this.element.querySelector("h3").textContent = "Loading...";
+    document.getElementById("detailedView-loading").classList.remove("d-none");
+    document.getElementById("detailedView-title").textContent = "";
+    document.querySelector("#detailedView-route .text-body-secondary").textContent = "";
     document.getElementById("archonShards-card").classList.add("d-none");
     document.getElementById("valenceBonus-card").classList.add("d-none");
     if (window.didInitialInventoryUpdate) {
@@ -2252,6 +2275,13 @@ function doAddCurrency(currency) {
             updateInventory();
         });
     });
+}
+
+function readdQuestKey(itemMap, itemType) {
+    const option = document.createElement("option");
+    option.setAttribute("data-key", itemType);
+    option.value = itemMap[itemType]?.name ?? itemType;
+    document.getElementById("datalist-QuestKeys").appendChild(option);
 }
 
 function doQuestUpdate(operation, itemType) {
@@ -2764,3 +2794,16 @@ document.querySelectorAll("#sidebar .nav-link").forEach(function (elm) {
         window.scrollTo(0, 0);
     });
 });
+
+async function markAllAsRead() {
+    await revalidateAuthz();
+    const { Inbox } = await fetch("/api/inbox.php?" + window.authz).then(x => x.json());
+    let any = false;
+    for (const msg of Inbox) {
+        if (!msg.r) {
+            await fetch("/api/inbox.php?" + window.authz + "&messageId=" + msg.messageId.$oid);
+            any = true;
+        }
+    }
+    toast(loc(any ? "code_succRelog" : "code_nothingToDo"));
+}

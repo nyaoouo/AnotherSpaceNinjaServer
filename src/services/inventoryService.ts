@@ -67,7 +67,8 @@ import {
     kubrowDetails,
     kubrowFurPatternsWeights,
     kubrowWeights,
-    toOid
+    toOid,
+    TTraitsPool
 } from "@/src/helpers/inventoryHelpers";
 import { addQuestKey, completeQuest } from "@/src/services/questService";
 import { handleBundleAcqusition } from "@/src/services/purchaseService";
@@ -481,11 +482,14 @@ export const addItem = async (
             if (quantity != 1) {
                 logger.warn(`adding 1 of ${typeName} ${targetFingerprint} even tho quantity ${quantity} was requested`);
             }
-            inventory.Upgrades.push({
-                ItemType: typeName,
-                UpgradeFingerprint: targetFingerprint
-            });
-            return {}; // there's not exactly a common "InventoryChanges" format for these
+            const upgrade =
+                inventory.Upgrades[
+                    inventory.Upgrades.push({
+                        ItemType: typeName,
+                        UpgradeFingerprint: targetFingerprint
+                    }) - 1
+                ];
+            return { Upgrades: [upgrade.toJSON<IUpgradeClient>()] };
         }
         const changes = [
             {
@@ -811,7 +815,7 @@ export const addItem = async (
                         if (!seed) {
                             throw new Error(`Expected crew member to have a seed`);
                         }
-                        seed |= 0x33b81en << 32n;
+                        seed |= BigInt(Math.trunc(inventory.Created.getTime() / 1000) & 0xffffff) << 32n;
                         return {
                             ...addCrewMember(inventory, typeName, seed),
                             ...occupySlot(inventory, InventorySlot.CREWMEMBERS, premiumPurchase)
@@ -1048,6 +1052,21 @@ export const addSpaceSuit = (
     return inventoryChanges;
 };
 
+const createRandomTraits = (kubrowPetName: string, traitsPool: TTraitsPool): ITraits => {
+    return {
+        BaseColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
+        SecondaryColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
+        TertiaryColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
+        AccentColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
+        EyeColor: getRandomWeightedReward(traitsPool.EyeColors, kubrowWeights)!.type,
+        FurPattern: getRandomWeightedReward(traitsPool.FurPatterns, kubrowFurPatternsWeights)!.type,
+        Personality: kubrowPetName,
+        BodyType: getRandomWeightedReward(traitsPool.BodyTypes, kubrowWeights)!.type,
+        Head: traitsPool.Heads.length ? getRandomWeightedReward(traitsPool.Heads, kubrowWeights)!.type : undefined,
+        Tail: traitsPool.Tails.length ? getRandomWeightedReward(traitsPool.Tails, kubrowWeights)!.type : undefined
+    };
+};
+
 export const addKubrowPet = (
     inventory: TInventoryDatabaseDocument,
     kubrowPetName: string,
@@ -1064,7 +1083,6 @@ export const addKubrowPet = (
         addSpecialItem(inventory, specialItem, inventoryChanges);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     const configs: IItemConfig[] = applyDefaultUpgrades(inventory, kubrowPet?.defaultUpgrades);
 
     if (!details) {
@@ -1074,9 +1092,10 @@ export const addKubrowPet = (
             "/Lotus/Types/Game/CatbrowPet/VampireCatbrowPetPowerSuit"
         ].includes(kubrowPetName);
 
-        let traits: ITraits;
+        const traitsPool = isCatbrow ? catbrowDetails : kubrowDetails;
+        let dominantTraits: ITraits;
         if (kubrowPetName == "/Lotus/Types/Game/CatbrowPet/VampireCatbrowPetPowerSuit") {
-            traits = {
+            dominantTraits = {
                 BaseColor: "/Lotus/Types/Game/CatbrowPet/Colors/CatbrowPetColorBaseVampire",
                 SecondaryColor: "/Lotus/Types/Game/CatbrowPet/Colors/CatbrowPetColorSecondaryVampire",
                 TertiaryColor: "/Lotus/Types/Game/CatbrowPet/Colors/CatbrowPetColorTertiaryVampire",
@@ -1089,19 +1108,35 @@ export const addKubrowPet = (
                 Tail: "/Lotus/Types/Game/CatbrowPet/Tails/CatbrowTailVampire"
             };
         } else {
-            const traitsPool = isCatbrow ? catbrowDetails : kubrowDetails;
-            traits = {
-                BaseColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
-                SecondaryColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
-                TertiaryColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
-                AccentColor: getRandomWeightedReward(traitsPool.Colors, kubrowWeights)!.type,
-                EyeColor: getRandomWeightedReward(traitsPool.EyeColors, kubrowWeights)!.type,
-                FurPattern: getRandomWeightedReward(traitsPool.FurPatterns, kubrowFurPatternsWeights)!.type,
-                Personality: kubrowPetName,
-                BodyType: getRandomWeightedReward(traitsPool.BodyTypes, kubrowWeights)!.type,
-                Head: isCatbrow ? getRandomWeightedReward(traitsPool.Heads, kubrowWeights)!.type : undefined,
-                Tail: isCatbrow ? getRandomWeightedReward(traitsPool.Tails, kubrowWeights)!.type : undefined
-            };
+            dominantTraits = createRandomTraits(kubrowPetName, traitsPool);
+            if (kubrowPetName == "/Lotus/Types/Game/KubrowPet/ChargerKubrowPetPowerSuit") {
+                dominantTraits.BodyType = "/Lotus/Types/Game/KubrowPet/BodyTypes/ChargerKubrowPetBodyType";
+                dominantTraits.FurPattern = "/Lotus/Types/Game/KubrowPet/Patterns/KubrowPetPatternInfested";
+            }
+        }
+
+        const recessiveTraits: ITraits = createRandomTraits(
+            getRandomElement(
+                isCatbrow
+                    ? [
+                          "/Lotus/Types/Game/CatbrowPet/MirrorCatbrowPetPowerSuit",
+                          "/Lotus/Types/Game/CatbrowPet/CheshireCatbrowPetPowerSuit"
+                      ]
+                    : [
+                          "/Lotus/Types/Game/KubrowPet/AdventurerKubrowPetPowerSuit",
+                          "/Lotus/Types/Game/KubrowPet/FurtiveKubrowPetPowerSuit",
+                          "/Lotus/Types/Game/KubrowPet/GuardKubrowPetPowerSuit",
+                          "/Lotus/Types/Game/KubrowPet/HunterKubrowPetPowerSuit",
+                          "/Lotus/Types/Game/KubrowPet/RetrieverKubrowPetPowerSuit"
+                      ]
+            )!,
+            traitsPool
+        );
+        for (const key of Object.keys(recessiveTraits) as (keyof ITraits)[]) {
+            // My heurstic approximation is a 20% chance for a dominant trait to be copied into the recessive traits. TODO: A more scientific statistical analysis maybe?
+            if (Math.random() < 0.2) {
+                recessiveTraits[key] = dominantTraits[key]!;
+            }
         }
 
         details = {
@@ -1113,8 +1148,8 @@ export const addKubrowPet = (
             HatchDate: premiumPurchase ? new Date() : new Date(Date.now() + 10 * unixTimesInMs.hour), // On live, this seems to be somewhat randomised so that the pet hatches 9~11 hours after start.
             IsMale: !!getRandomInt(0, 1),
             Size: getRandomInt(70, 100) / 100,
-            DominantTraits: traits,
-            RecessiveTraits: traits
+            DominantTraits: dominantTraits,
+            RecessiveTraits: recessiveTraits
         };
     }
 
@@ -1897,7 +1932,7 @@ export const addCalendarProgress = (inventory: TInventoryDatabaseDocument, value
     calendarProgress.SeasonProgress.LastCompletedChallengeDayIdx = currentSeason.Days.findIndex(
         day => day.events.length != 0 && day.events[0].challenge == value[value.length - 1].challenge
     );
-    checkCalendarChallengeCompletion(calendarProgress, currentSeason);
+    checkCalendarAutoAdvance(inventory, currentSeason);
 };
 
 export const addMissionComplete = (inventory: TInventoryDatabaseDocument, { Tag, Completes, Tier }: IMission): void => {
@@ -2082,8 +2117,8 @@ export const getCalendarProgress = (inventory: TInventoryDatabaseDocument): ICal
             },
             SeasonProgress: {
                 SeasonType: currentSeason.Season,
-                LastCompletedDayIdx: 0,
-                LastCompletedChallengeDayIdx: 0,
+                LastCompletedDayIdx: -1,
+                LastCompletedChallengeDayIdx: -1,
                 ActivatedChallenges: []
             }
         };
@@ -2104,16 +2139,44 @@ export const getCalendarProgress = (inventory: TInventoryDatabaseDocument): ICal
     return inventory.CalendarProgress;
 };
 
-export const checkCalendarChallengeCompletion = (
-    calendarProgress: ICalendarProgress,
+export const checkCalendarAutoAdvance = (
+    inventory: TInventoryDatabaseDocument,
     currentSeason: ICalendarSeason
 ): void => {
-    const dayIndex = calendarProgress.SeasonProgress.LastCompletedDayIdx + 1;
-    if (calendarProgress.SeasonProgress.LastCompletedChallengeDayIdx >= dayIndex) {
+    const calendarProgress = inventory.CalendarProgress!;
+    for (
+        let dayIndex = calendarProgress.SeasonProgress.LastCompletedDayIdx + 1;
+        dayIndex != currentSeason.Days.length;
+        ++dayIndex
+    ) {
         const day = currentSeason.Days[dayIndex];
-        if (day.events.length != 0 && day.events[0].type == "CET_CHALLENGE") {
+        if (day.events.length == 0) {
+            // birthday
+            if (day.day == 1) {
+                // kaya
+                if ((inventory.Affiliations.find(x => x.Tag == "HexSyndicate")?.Title || 0) >= 4) {
+                    break;
+                }
+                logger.debug(`cannot talk to kaya, skipping birthday`);
+                calendarProgress.SeasonProgress.LastCompletedDayIdx++;
+            } else if (day.day == 74 || day.day == 355) {
+                // minerva, velimir
+                if ((inventory.Affiliations.find(x => x.Tag == "HexSyndicate")?.Title || 0) >= 5) {
+                    break;
+                }
+                logger.debug(`cannot talk to minerva/velimir, skipping birthday`);
+                calendarProgress.SeasonProgress.LastCompletedDayIdx++;
+            } else {
+                break;
+            }
+        } else if (day.events[0].type == "CET_CHALLENGE") {
+            if (calendarProgress.SeasonProgress.LastCompletedChallengeDayIdx < dayIndex) {
+                break;
+            }
             //logger.debug(`already completed the challenge, skipping ahead`);
             calendarProgress.SeasonProgress.LastCompletedDayIdx++;
+        } else {
+            break;
         }
     }
 };

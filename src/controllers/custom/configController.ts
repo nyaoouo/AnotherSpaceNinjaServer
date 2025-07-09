@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
 import { config } from "@/src/services/configService";
 import { getAccountForRequest, isAdministrator } from "@/src/services/loginService";
-import { saveConfig } from "@/src/services/configWatcherService";
+import { saveConfig } from "@/src/services/configWriterService";
 import { sendWsBroadcastExcept } from "@/src/services/wsService";
 
 export const getConfigController: RequestHandler = async (req, res) => {
@@ -37,6 +37,8 @@ const configIdToIndexable = (id: string): [Record<string, boolean | string | num
     let obj = config as unknown as Record<string, never>;
     const arr = id.split(".");
     while (arr.length > 1) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        obj[arr[0]] ??= {} as never;
         obj = obj[arr[0]];
         arr.splice(0, 1);
     }

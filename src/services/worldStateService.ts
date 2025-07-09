@@ -9,7 +9,7 @@ import darvoDeals from "@/static/fixed_responses/worldState/darvoDeals.json";
 import { buildConfig } from "@/src/services/buildConfigService";
 import { unixTimesInMs } from "@/src/constants/timeConstants";
 import { config } from "@/src/services/configService";
-import { getRandomElement, getRandomInt, SRng } from "@/src/services/rngService";
+import { getRandomElement, getRandomInt, sequentiallyUniqueRandomElement, SRng } from "@/src/services/rngService";
 import { eMissionType, ExportRegions, ExportSyndicates, IRegion } from "warframe-public-export-plus";
 import {
     ICalendarDay,
@@ -385,44 +385,35 @@ const getSeasonChallengePools = (syndicateTag: string): IRotatingSeasonChallenge
 const getSeasonDailyChallenge = (pools: IRotatingSeasonChallengePools, day: number): ISeasonChallenge => {
     const dayStart = EPOCH + day * 86400000;
     const dayEnd = EPOCH + (day + 3) * 86400000;
-    const rng = new SRng(new SRng(day).randomInt(0, 100_000));
     return {
         _id: { $oid: "67e1b5ca9d00cb47" + day.toString().padStart(8, "0") },
         Daily: true,
         Activation: { $date: { $numberLong: dayStart.toString() } },
         Expiry: { $date: { $numberLong: dayEnd.toString() } },
-        Challenge: rng.randomElement(pools.daily)!
+        Challenge: sequentiallyUniqueRandomElement(pools.daily, day, 2, 605732938)!
     };
 };
 
-const getSeasonWeeklyChallenge = (pools: IRotatingSeasonChallengePools, week: number, id: number): ISeasonChallenge => {
-    const weekStart = EPOCH + week * 604800000;
-    const weekEnd = weekStart + 604800000;
-    const challengeId = week * 7 + id;
-    const rng = new SRng(new SRng(challengeId).randomInt(0, 100_000));
-    return {
-        _id: { $oid: "67e1bb2d9d00cb47" + challengeId.toString().padStart(8, "0") },
-        Activation: { $date: { $numberLong: weekStart.toString() } },
-        Expiry: { $date: { $numberLong: weekEnd.toString() } },
-        Challenge: rng.randomElement(pools.weekly)!
-    };
-};
-
-const getSeasonWeeklyHardChallenge = (
-    pools: IRotatingSeasonChallengePools,
+const pushSeasonWeeklyChallenge = (
+    activeChallenges: ISeasonChallenge[],
+    pool: string[],
     week: number,
     id: number
-): ISeasonChallenge => {
+): void => {
     const weekStart = EPOCH + week * 604800000;
     const weekEnd = weekStart + 604800000;
     const challengeId = week * 7 + id;
     const rng = new SRng(new SRng(challengeId).randomInt(0, 100_000));
-    return {
+    let challenge: string;
+    do {
+        challenge = rng.randomElement(pool)!;
+    } while (activeChallenges.some(x => x.Challenge == challenge));
+    activeChallenges.push({
         _id: { $oid: "67e1bb2d9d00cb47" + challengeId.toString().padStart(8, "0") },
         Activation: { $date: { $numberLong: weekStart.toString() } },
         Expiry: { $date: { $numberLong: weekEnd.toString() } },
-        Challenge: rng.randomElement(pools.hardWeekly)!
-    };
+        Challenge: challenge
+    });
 };
 
 const pushWeeklyActs = (
@@ -433,8 +424,8 @@ const pushWeeklyActs = (
     const weekStart = EPOCH + week * 604800000;
     const weekEnd = weekStart + 604800000;
 
-    activeChallenges.push(getSeasonWeeklyChallenge(pools, week, 0));
-    activeChallenges.push(getSeasonWeeklyChallenge(pools, week, 1));
+    pushSeasonWeeklyChallenge(activeChallenges, pools.weekly, week, 0);
+    pushSeasonWeeklyChallenge(activeChallenges, pools.weekly, week, 1);
     if (pools.hasWeeklyPermanent) {
         activeChallenges.push({
             _id: { $oid: "67e1b96e9d00cb47" + (week * 7 + 0).toString().padStart(8, "0") },
@@ -454,14 +445,14 @@ const pushWeeklyActs = (
             Expiry: { $date: { $numberLong: weekEnd.toString() } },
             Challenge: "/Lotus/Types/Challenges/Seasons/Weekly/SeasonWeeklyPermanentKillEnemies"
         });
-        activeChallenges.push(getSeasonWeeklyHardChallenge(pools, week, 2));
-        activeChallenges.push(getSeasonWeeklyHardChallenge(pools, week, 3));
+        pushSeasonWeeklyChallenge(activeChallenges, pools.hardWeekly, week, 2);
+        pushSeasonWeeklyChallenge(activeChallenges, pools.hardWeekly, week, 3);
     } else {
-        activeChallenges.push(getSeasonWeeklyChallenge(pools, week, 2));
-        activeChallenges.push(getSeasonWeeklyChallenge(pools, week, 3));
-        activeChallenges.push(getSeasonWeeklyChallenge(pools, week, 4));
-        activeChallenges.push(getSeasonWeeklyHardChallenge(pools, week, 5));
-        activeChallenges.push(getSeasonWeeklyHardChallenge(pools, week, 6));
+        pushSeasonWeeklyChallenge(activeChallenges, pools.weekly, week, 2);
+        pushSeasonWeeklyChallenge(activeChallenges, pools.weekly, week, 3);
+        pushSeasonWeeklyChallenge(activeChallenges, pools.weekly, week, 4);
+        pushSeasonWeeklyChallenge(activeChallenges, pools.hardWeekly, week, 5);
+        pushSeasonWeeklyChallenge(activeChallenges, pools.hardWeekly, week, 6);
     }
 };
 
@@ -980,25 +971,26 @@ const getCalendarSeason = (week: number): ICalendarSeason => {
 
 // Not very faithful, but to avoid the same node coming up back-to-back (which is not valid), I've split these into 2 arrays which we're alternating between.
 
-const voidStormMissionsA = {
-    VoidT1: ["CrewBattleNode519", "CrewBattleNode518", "CrewBattleNode515", "CrewBattleNode503"],
-    VoidT2: ["CrewBattleNode501", "CrewBattleNode534", "CrewBattleNode530"],
-    VoidT3: ["CrewBattleNode521", "CrewBattleNode516"],
+const voidStormMissions = {
+    VoidT1: [
+        "CrewBattleNode519",
+        "CrewBattleNode518",
+        "CrewBattleNode515",
+        "CrewBattleNode503",
+        "CrewBattleNode509",
+        "CrewBattleNode522",
+        "CrewBattleNode511",
+        "CrewBattleNode512"
+    ],
+    VoidT2: ["CrewBattleNode501", "CrewBattleNode534", "CrewBattleNode530", "CrewBattleNode535", "CrewBattleNode533"],
+    VoidT3: ["CrewBattleNode521", "CrewBattleNode516", "CrewBattleNode524", "CrewBattleNode525"],
     VoidT4: [
         "CrewBattleNode555",
         "CrewBattleNode553",
         "CrewBattleNode554",
         "CrewBattleNode539",
         "CrewBattleNode531",
-        "CrewBattleNode527"
-    ]
-};
-
-const voidStormMissionsB = {
-    VoidT1: ["CrewBattleNode509", "CrewBattleNode522", "CrewBattleNode511", "CrewBattleNode512"],
-    VoidT2: ["CrewBattleNode535", "CrewBattleNode533"],
-    VoidT3: ["CrewBattleNode524", "CrewBattleNode525"],
-    VoidT4: [
+        "CrewBattleNode527",
         "CrewBattleNode542",
         "CrewBattleNode538",
         "CrewBattleNode543",
@@ -1006,18 +998,21 @@ const voidStormMissionsB = {
         "CrewBattleNode550",
         "CrewBattleNode529"
     ]
-};
+} as const;
+
+const voidStormLookbehind = {
+    VoidT1: 3,
+    VoidT2: 1,
+    VoidT3: 1,
+    VoidT4: 3
+} as const;
 
 const pushVoidStorms = (arr: IVoidStorm[], hour: number): void => {
     const activation = hour * unixTimesInMs.hour + 40 * unixTimesInMs.minute;
     const expiry = activation + 90 * unixTimesInMs.minute;
     let accum = 0;
-    const rng = new SRng(new SRng(hour).randomInt(0, 100_000));
-    const voidStormMissions = structuredClone(hour & 1 ? voidStormMissionsA : voidStormMissionsB);
+    const tierIdx = { VoidT1: hour * 2, VoidT2: hour, VoidT3: hour, VoidT4: hour * 2 };
     for (const tier of ["VoidT1", "VoidT1", "VoidT2", "VoidT3", "VoidT4", "VoidT4"] as const) {
-        const idx = rng.randomInt(0, voidStormMissions[tier].length - 1);
-        const node = voidStormMissions[tier][idx];
-        voidStormMissions[tier].splice(idx, 1);
         arr.push({
             _id: {
                 $oid:
@@ -1025,7 +1020,12 @@ const pushVoidStorms = (arr: IVoidStorm[], hour: number): void => {
                     "0321e89b" +
                     (accum++).toString().padStart(8, "0")
             },
-            Node: node,
+            Node: sequentiallyUniqueRandomElement(
+                voidStormMissions[tier],
+                tierIdx[tier]++,
+                voidStormLookbehind[tier],
+                2051969264
+            )!,
             Activation: { $date: { $numberLong: activation.toString() } },
             Expiry: { $date: { $numberLong: expiry.toString() } },
             ActiveMissionTier: tier
@@ -1033,75 +1033,124 @@ const pushVoidStorms = (arr: IVoidStorm[], hour: number): void => {
     }
 };
 
-const doesTimeSatsifyConstraints = (timeSecs: number): boolean => {
-    if (config.worldState?.eidolonOverride) {
+interface ITimeConstraint {
+    //name: string;
+    isValidTime: (timeSecs: number) => boolean;
+    getIdealTimeBefore: (timeSecs: number) => number;
+}
+
+const eidolonDayConstraint: ITimeConstraint = {
+    //name: "eidolon day",
+    isValidTime: (timeSecs: number): boolean => {
         const eidolonEpoch = 1391992660;
         const eidolonCycle = Math.trunc((timeSecs - eidolonEpoch) / 9000);
         const eidolonCycleStart = eidolonEpoch + eidolonCycle * 9000;
         const eidolonCycleEnd = eidolonCycleStart + 9000;
         const eidolonCycleNightStart = eidolonCycleEnd - 3000;
-        if (config.worldState.eidolonOverride == "day") {
-            if (
-                //timeSecs < eidolonCycleStart ||
-                isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, eidolonCycleNightStart * 1000)
-            ) {
-                return false;
-            }
-        } else {
-            if (
-                timeSecs < eidolonCycleNightStart ||
-                isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, eidolonCycleEnd * 1000)
-            ) {
-                return false;
-            }
-        }
+        return !isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, eidolonCycleNightStart * 1000);
+    },
+    getIdealTimeBefore: (timeSecs: number): number => {
+        const eidolonEpoch = 1391992660;
+        const eidolonCycle = Math.trunc((timeSecs - eidolonEpoch) / 9000);
+        const eidolonCycleStart = eidolonEpoch + eidolonCycle * 9000;
+        return eidolonCycleStart;
     }
+};
 
-    if (config.worldState?.vallisOverride) {
+const eidolonNightConstraint: ITimeConstraint = {
+    //name: "eidolon night",
+    isValidTime: (timeSecs: number): boolean => {
+        const eidolonEpoch = 1391992660;
+        const eidolonCycle = Math.trunc((timeSecs - eidolonEpoch) / 9000);
+        const eidolonCycleStart = eidolonEpoch + eidolonCycle * 9000;
+        const eidolonCycleEnd = eidolonCycleStart + 9000;
+        const eidolonCycleNightStart = eidolonCycleEnd - 3000;
+        return (
+            timeSecs >= eidolonCycleNightStart &&
+            !isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, eidolonCycleEnd * 1000)
+        );
+    },
+    getIdealTimeBefore: (timeSecs: number): number => {
+        const eidolonEpoch = 1391992660;
+        const eidolonCycle = Math.trunc((timeSecs - eidolonEpoch) / 9000);
+        const eidolonCycleStart = eidolonEpoch + eidolonCycle * 9000;
+        const eidolonCycleEnd = eidolonCycleStart + 9000;
+        const eidolonCycleNightStart = eidolonCycleEnd - 3000;
+        if (eidolonCycleNightStart > timeSecs) {
+            // Night hasn't started yet, but we need to return a time in the past.
+            return eidolonCycleNightStart - 9000;
+        }
+        return eidolonCycleNightStart;
+    }
+};
+
+const venusColdConstraint: ITimeConstraint = {
+    //name: "venus cold",
+    isValidTime: (timeSecs: number): boolean => {
         const vallisEpoch = 1541837628;
         const vallisCycle = Math.trunc((timeSecs - vallisEpoch) / 1600);
         const vallisCycleStart = vallisEpoch + vallisCycle * 1600;
         const vallisCycleEnd = vallisCycleStart + 1600;
         const vallisCycleColdStart = vallisCycleStart + 400;
-        if (config.worldState.vallisOverride == "cold") {
-            if (
-                timeSecs < vallisCycleColdStart ||
-                isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, vallisCycleEnd * 1000)
-            ) {
-                return false;
-            }
-        } else {
-            if (
-                //timeSecs < vallisCycleStart ||
-                isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, vallisCycleColdStart * 1000)
-            ) {
-                return false;
+        return (
+            timeSecs >= vallisCycleColdStart &&
+            !isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, vallisCycleEnd * 1000)
+        );
+    },
+    getIdealTimeBefore: (timeSecs: number): number => {
+        const vallisEpoch = 1541837628;
+        const vallisCycle = Math.trunc((timeSecs - vallisEpoch) / 1600);
+        const vallisCycleStart = vallisEpoch + vallisCycle * 1600;
+        const vallisCycleColdStart = vallisCycleStart + 400;
+        if (vallisCycleColdStart > timeSecs) {
+            // Cold hasn't started yet, but we need to return a time in the past.
+            return vallisCycleColdStart - 1600;
+        }
+        return vallisCycleColdStart;
+    }
+};
+
+const venusWarmConstraint: ITimeConstraint = {
+    //name: "venus warm",
+    isValidTime: (timeSecs: number): boolean => {
+        const vallisEpoch = 1541837628;
+        const vallisCycle = Math.trunc((timeSecs - vallisEpoch) / 1600);
+        const vallisCycleStart = vallisEpoch + vallisCycle * 1600;
+        const vallisCycleColdStart = vallisCycleStart + 400;
+        return !isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, vallisCycleColdStart * 1000);
+    },
+    getIdealTimeBefore: (timeSecs: number): number => {
+        const vallisEpoch = 1541837628;
+        const vallisCycle = Math.trunc((timeSecs - vallisEpoch) / 1600);
+        const vallisCycleStart = vallisEpoch + vallisCycle * 1600;
+        return vallisCycleStart;
+    }
+};
+
+const getIdealTimeSatsifyingConstraints = (constraints: ITimeConstraint[]): number => {
+    let timeSecs = Math.trunc(Date.now() / 1000);
+    let allGood;
+    do {
+        allGood = true;
+        for (const constraint of constraints) {
+            if (!constraint.isValidTime(timeSecs)) {
+                //logger.debug(`${constraint.name} is not happy with ${timeSecs}`);
+                const prevTimeSecs = timeSecs;
+                const suggestion = constraint.getIdealTimeBefore(timeSecs);
+                timeSecs = suggestion;
+                do {
+                    timeSecs += 60;
+                    if (timeSecs >= prevTimeSecs || !constraint.isValidTime(timeSecs)) {
+                        timeSecs = suggestion; // Can't find a compromise; just take the suggestion and try to compromise on another constraint.
+                        break;
+                    }
+                } while (!constraints.every(constraint => constraint.isValidTime(timeSecs)));
+                allGood = false;
+                break;
             }
         }
-    }
-
-    if (config.worldState?.duviriOverride) {
-        const duviriMoods = ["sorrow", "fear", "joy", "anger", "envy"];
-        const desiredMood = duviriMoods.indexOf(config.worldState.duviriOverride);
-        if (desiredMood == -1) {
-            logger.warn(`ignoring invalid config value for worldState.duviriOverride`, {
-                value: config.worldState.duviriOverride,
-                valid_values: duviriMoods
-            });
-        } else {
-            const moodIndex = Math.trunc(timeSecs / 7200);
-            const moodStart = moodIndex * 7200;
-            const moodEnd = moodStart + 7200;
-            if (
-                moodIndex % 5 != desiredMood ||
-                isBeforeNextExpectedWorldStateRefresh(timeSecs * 1000, moodEnd * 1000)
-            ) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    } while (!allGood);
+    return timeSecs;
 };
 
 const getVarziaRotation = (week: number): string => {
@@ -1179,10 +1228,38 @@ const getAllVarziaManifests = (): IPrimeVaultTraderOffer[] => {
 };
 
 export const getWorldState = (buildLabel?: string): IWorldState => {
-    let timeSecs = Math.round(Date.now() / 1000);
-    while (!doesTimeSatsifyConstraints(timeSecs)) {
-        timeSecs -= 60;
+    const constraints: ITimeConstraint[] = [];
+    if (config.worldState?.eidolonOverride) {
+        constraints.push(config.worldState.eidolonOverride == "day" ? eidolonDayConstraint : eidolonNightConstraint);
     }
+    if (config.worldState?.vallisOverride) {
+        constraints.push(config.worldState.vallisOverride == "cold" ? venusColdConstraint : venusWarmConstraint);
+    }
+    if (config.worldState?.duviriOverride) {
+        const duviriMoods = ["sorrow", "fear", "joy", "anger", "envy"];
+        const desiredMood = duviriMoods.indexOf(config.worldState.duviriOverride);
+        if (desiredMood == -1) {
+            logger.warn(`ignoring invalid config value for worldState.duviriOverride`, {
+                value: config.worldState.duviriOverride,
+                valid_values: duviriMoods
+            });
+        } else {
+            constraints.push({
+                //name: `duviri ${config.worldState.duviriOverride}`,
+                isValidTime: (timeSecs: number): boolean => {
+                    const moodIndex = Math.trunc(timeSecs / 7200);
+                    return moodIndex % 5 == desiredMood;
+                },
+                getIdealTimeBefore: (timeSecs: number): number => {
+                    let moodIndex = Math.trunc(timeSecs / 7200);
+                    moodIndex -= ((moodIndex % 5) - desiredMood + 5) % 5; // while (moodIndex % 5 != desiredMood) --moodIndex;
+                    const moodStart = moodIndex * 7200;
+                    return moodStart;
+                }
+            });
+        }
+    }
+    const timeSecs = getIdealTimeSatsifyingConstraints(constraints);
     const timeMs = timeSecs * 1000;
     const day = Math.trunc((timeMs - EPOCH) / 86400000);
     const week = Math.trunc(day / 7);
@@ -1476,9 +1553,10 @@ export const getWorldState = (buildLabel?: string): IWorldState => {
         const pt: IPrimeVaultTrader = {
             _id: { $oid: ((weekStart / 1000) & 0xffffffff).toString(16).padStart(8, "0") + "c36af423770eaa97" },
             Activation: { $date: { $numberLong: weekStart.toString() } },
-            Expiry: { $date: { $numberLong: weekEnd.toString() } },
+            InitialStartDate: { $date: { $numberLong: "1662738144266" } },
             Node: "TradeHUB1",
             Manifest: [],
+            Expiry: { $date: { $numberLong: weekEnd.toString() } },
             EvergreenManifest: varzia.evergreen,
             ScheduleInfo: []
         };
