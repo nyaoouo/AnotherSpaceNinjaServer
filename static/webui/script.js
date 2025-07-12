@@ -667,6 +667,21 @@ function updateInventory() {
                         const td = document.createElement("td");
                         td.classList = "text-end text-nowrap";
 
+                        if (category == "Suits") {
+                            const a = document.createElement("a");
+                            a.href = "#";
+                            a.onclick = () => showSuitInvigorationForm(item);
+                            a.innerHTML = `<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+  <path d="M15.907 11.998 10.332 9.23a.9.9 0 0 1-.16-.037l-.018-.007v6.554c0 .017.008.034.01.051l2.388-2.974 3.355-.82Z"/>
+  <path d="m11.463 4.054 5.579 3.323A4.02 4.02 0 0 1 18.525 9c.332.668.47 1.414.398 2.155a3.07 3.07 0 0 1-.745 1.65 3.108 3.108 0 0 1-1.55.951c-.022.007-.045.005-.07.01-.062.03-.126.057-.191.08l-2.72.667-1.992 2.48c-.18.227-.41.409-.67.534.047.034.085.077.137.107a2.05 2.05 0 0 0 1.995.035c.592-.33 2.15-1.201 4.636-2.892l.28-.19c1.328-.895 3.616-2.442 3.967-4.215a9.94 9.94 0 0 0-1.713-4.154 10.027 10.027 0 0 0-3.375-2.989 10.107 10.107 0 0 0-8.802-.418c1.162.287 2.287.704 3.354 1.243Z"/>
+  <path d="M5.382 17.082v-6.457a3.7 3.7 0 0 1 .45-1.761 3.733 3.733 0 0 1 1.238-1.34 3.915 3.915 0 0 1 3.433-.245c.176.03.347.084.508.161l5.753 2.856c.082.05.161.105.236.165a2.128 2.128 0 0 0-.953-1.455l-5.51-3.284c-1.74-.857-3.906-1.523-5.244-1.097a9.96 9.96 0 0 0-2.5 3.496 9.895 9.895 0 0 0 .283 8.368 9.973 9.973 0 0 0 2.73 3.322 17.161 17.161 0 0 1-.424-2.729Z"/>
+  <path d="m19.102 16.163-.272.183c-2.557 1.74-4.169 2.64-4.698 2.935a4.083 4.083 0 0 1-2 .53 3.946 3.946 0 0 1-1.983-.535 3.788 3.788 0 0 1-1.36-1.361 3.752 3.752 0 0 1-.51-1.85 1.812 1.812 0 0 1-.043-.26V9.143c0-.024.009-.046.01-.07-.056.02-.11.043-.162.07a1.796 1.796 0 0 0-.787 1.516v6.377a10.67 10.67 0 0 0 1.113 4.27 10.11 10.11 0 0 0 8.505-.53 10.022 10.022 0 0 0 3.282-2.858 9.936 9.936 0 0 0 1.75-3.97 19.615 19.615 0 0 1-2.845 2.216Z"/>
+</svg>`;
+                            a.style.textDecoration = "none";
+                            a.title = "";
+                            td.appendChild(a);
+                        }
+
                         let maxXP = Math.pow(uniqueLevelCaps[item.ItemType] ?? 30, 2) * 1000;
                         if (
                             category != "Suits" &&
@@ -2806,4 +2821,119 @@ async function markAllAsRead() {
         }
     }
     toast(loc(any ? "code_succRelog" : "code_nothingToDo"));
+}
+
+function showSuitInvigorationForm(suitData) {
+    document.getElementById("invigoration-oid").value = suitData.ItemId.$oid;
+
+    // Auto-fill form with existing data
+    document.getElementById("invigoration-offensive").value = suitData?.OffensiveUpgrade || "";
+    document.getElementById("invigoration-defensive").value = suitData?.DefensiveUpgrade || "";
+
+    // Handle expiry date
+    if (suitData?.UpgradesExpiry) {
+        let expiryDate;
+        if (suitData.UpgradesExpiry.$date) {
+            // MongoDB format: { "$date": { "$numberLong": "1752933467151" } }
+            expiryDate = new Date(parseInt(suitData.UpgradesExpiry.$date.$numberLong));
+        } else if (typeof suitData.UpgradesExpiry === "number") {
+            // Timestamp format
+            expiryDate = new Date(suitData.UpgradesExpiry);
+        } else if (suitData.UpgradesExpiry instanceof Date) {
+            // Date object
+            expiryDate = suitData.UpgradesExpiry;
+        }
+
+        if (expiryDate && !isNaN(expiryDate.getTime())) {
+            // Format for datetime-local input (YYYY-MM-DDTHH:mm)
+            const year = expiryDate.getFullYear();
+            const month = String(expiryDate.getMonth() + 1).padStart(2, "0");
+            const day = String(expiryDate.getDate()).padStart(2, "0");
+            const hours = String(expiryDate.getHours()).padStart(2, "0");
+            const minutes = String(expiryDate.getMinutes()).padStart(2, "0");
+
+            document.getElementById("invigoration-expiry").value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        } else {
+            document.getElementById("invigoration-expiry").value = "";
+        }
+    } else {
+        document.getElementById("invigoration-expiry").value = "";
+    }
+
+    const form = document.getElementById("editSuitInvigorationForm");
+    form.style.display = "block";
+    form.style.position = "fixed";
+    form.style.top = "50%";
+    form.style.left = "50%";
+    form.style.transform = "translate(-50%, -50%)";
+    form.style.zIndex = "1050";
+    form.style.width = "400px";
+
+    // Add backdrop
+    const backdrop = document.createElement("div");
+    backdrop.id = "invigoration-backdrop";
+    backdrop.style.position = "fixed";
+    backdrop.style.top = "0";
+    backdrop.style.left = "0";
+    backdrop.style.width = "100%";
+    backdrop.style.height = "100%";
+    backdrop.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    backdrop.style.zIndex = "1040";
+    backdrop.onclick = hideSuitInvigorationForm;
+    document.body.appendChild(backdrop);
+}
+
+function hideSuitInvigorationForm() {
+    document.getElementById("editSuitInvigorationForm").style.display = "none";
+    const backdrop = document.getElementById("invigoration-backdrop");
+    if (backdrop) {
+        backdrop.remove();
+    }
+}
+
+function submitSuitInvigorationUpgrade(event) {
+    event.preventDefault();
+
+    const oid = document.getElementById("invigoration-oid").value;
+    const offensiveUpgrade = document.getElementById("invigoration-offensive").value;
+    const defensiveUpgrade = document.getElementById("invigoration-defensive").value;
+    const expiry = document.getElementById("invigoration-expiry").value;
+
+    if (!offensiveUpgrade && !defensiveUpgrade) {
+        alert("Please select at least one upgrade type.");
+        return;
+    }
+
+    const data = {
+        OffensiveUpgrade: offensiveUpgrade,
+        DefensiveUpgrade: defensiveUpgrade
+    };
+
+    if (expiry) {
+        data.UpgradesExpiry = new Date(expiry).getTime();
+    }
+
+    editSuitInvigorationUpgrade(oid, data);
+    hideSuitInvigorationForm();
+}
+
+function clearSuitInvigorationUpgrades() {
+    const oid = document.getElementById("invigoration-oid").value;
+    editSuitInvigorationUpgrade(oid, null);
+    hideSuitInvigorationForm();
+}
+
+async function editSuitInvigorationUpgrade(oid, data) {
+    /* data?: {
+            DefensiveUpgrade: string;
+            OffensiveUpgrade: string;
+            UpgradesExpiry?: number;
+    }*/
+    $.post({
+        url: "/custom/editSuitInvigorationUpgrade?" + window.authz,
+        contentType: "application/json",
+        data: JSON.stringify({ oid, data })
+    }).done(function () {
+        updateInventory();
+    });
 }
