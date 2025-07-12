@@ -26,6 +26,7 @@ import { manageQuestsController } from "@/src/controllers/custom/manageQuestsCon
 import { setEvolutionProgressController } from "@/src/controllers/custom/setEvolutionProgressController";
 import { setBoosterController } from "@/src/controllers/custom/setBoosterController";
 import { updateFingerprintController } from "@/src/controllers/custom/updateFingerprintController";
+import { changeModularPartsController } from "@/src/controllers/custom/changeModularPartsController";
 
 import { getConfigController, setConfigController } from "@/src/controllers/custom/configController";
 
@@ -57,6 +58,7 @@ customRouter.post("/manageQuests", manageQuestsController);
 customRouter.post("/setEvolutionProgress", setEvolutionProgressController);
 customRouter.post("/setBooster", setBoosterController);
 customRouter.post("/updateFingerprint", updateFingerprintController);
+customRouter.post("/changeModularParts", changeModularPartsController);
 
 customRouter.post("/getConfig", getConfigController);
 customRouter.post("/setConfig", setConfigController);
