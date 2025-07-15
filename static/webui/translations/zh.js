@@ -1,4 +1,4 @@
-// Chinese translation by meb154, bishan178 & Corvus
+// Chinese translation by meb154, bishan178, nyaoouo, qianlishun, CrazyZhang & Corvus
 dict = {
     general_inventoryUpdateNote: `注意:要在游戏中查看更改,您需要重新同步库存,例如使用引导程序的 /sync 命令、访问道场/中继站或重新登录客户端.`,
     general_addButton: `添加`,
@@ -62,6 +62,7 @@ dict = {
     code_mature: `成长并战备`,
     code_unmature: `逆转衰老基因`,
     code_succChange: `更改成功.`,
+    code_requiredInvigorationUpgrade: `您必须同时选择一个进攻型和一个功能型活化属性.`,
     login_description: `使用您的 OpenWF 账户凭证登录(与游戏内连接本服务器时使用的昵称相同).`,
     login_emailLabel: `电子邮箱`,
     login_passwordLabel: `密码`,
@@ -125,6 +126,36 @@ dict = {
     detailedView_valenceBonusLabel: `效价加成`,
     detailedView_valenceBonusDescription: `您可以设置或移除武器上的效价加成.`,
     detailedView_modularPartsLabel: `更换部件`,
+    detailedView_editSuitInvigoration: `编辑战甲活化属性`,
+
+    invigorations_offensive_PowerStrength: `+200%技能强度`,
+    invigorations_offensive_PowerRange: `+100%技能范围`,
+    invigorations_offensive_PowerDuration: `+100%技能持续时间`,
+    invigorations_offensive_MeleeDamage: `+250%近战伤害`,
+    invigorations_offensive_PrimaryDamage: `+250%主武器伤害`,
+    invigorations_offensive_SecondaryDamage: `+250%副武器伤害`,
+    invigorations_offensive_PrimaryCritChance: `+200%主武器暴击几率`,
+    invigorations_offensive_SecondaryCritChance: `+200%副武器暴击几率`,
+    invigorations_offensive_MeleeCritChance: `+200%近战暴击几率`,
+
+    invigorations_utility_PowerEfficiency: `+75%技能效率`,
+    invigorations_utility_MovementSpeed: `+75%冲刺速度`,
+    invigorations_utility_ParkourSpeed: `+75%跑酷速度`,
+    invigorations_utility_Health: `+1000生命值`,
+    invigorations_utility_Energy: `+200%最大能量`,
+    invigorations_utility_StatusResistance: `异常状态免疫`,
+    invigorations_utility_ReloadSpeed: `+75%装填速度`,
+    invigorations_utility_HealthRegen: `+25/秒生命再生`,
+    invigorations_utility_Armor: `+1000护甲值`,
+    invigorations_utility_Jumps: `+5跳跃次数`,
+    invigorations_utility_EnergyRegen: `+2/秒能量再生`,
+
+    invigorations_offensiveLabel: `进攻型属性`,
+    invigorations_defensiveLabel: `功能型属性`,
+    invigorations_expiryLabel: `活化时效(可选)`,
+    invigorations_applyButton: `应用活化`,
+    invigorations_clearButton: `清除活化`,
+    invigorations_noneOption: `无`,
 
     mods_addRiven: `添加裂罅MOD`,
     mods_fingerprint: `印记`,
